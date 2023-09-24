@@ -83,6 +83,10 @@ class Record(AbstractRecord):
             self.current_length += 1
             self.sum += a
             if self.current_length > 1:
+                '''
+                calculating the difference of arrival time between the heartbeat just received
+                and the previous heartbeat
+                '''
                 origin = self.array[(self.end_pointer - 2) % self.max_length]
                 difference = a - origin
                 self.difference[self.end_pointer_difference] = difference
@@ -93,11 +97,20 @@ class Record(AbstractRecord):
             self.array[self.start_pointer] = a
             self.start_pointer = (self.start_pointer + 1) % self.max_length
             self.end_pointer = (self.end_pointer + 1) % self.max_length
+            '''
+            Here, we only move the pointers to specify the start position 
+            and the end point, like a looped linked array
+            '''
             self.sum = self.sum + a - earliest_value
+
             if self.current_length > 1:
                 origin = self.array[(self.end_pointer - 2) % self.max_length]
                 difference = a - origin
                 self.difference[self.start_pointer_difference] = difference
+                '''
+                Why here is [self.start_pointer_difference] ???
+                Because self.start_pointer_difference here is not updated yet? 
+                '''
                 self.end_pointer_difference = (self.end_pointer_difference + 1) % (self.max_length - 1)
                 self.start_pointer_difference = (self.start_pointer_difference + 1) % (self.max_length - 1)
             return earliest_value
@@ -115,6 +128,9 @@ class Record(AbstractRecord):
         if self.current_length < self.max_length:
             return self.array[self.start_pointer:self.end_pointer]
         else:
+            '''
+            Put everything in order and return the array
+            '''
             return np.concatenate((self.array[self.start_pointer:], self.array[:self.end_pointer]), axis=0)
 
     def get_difference(self):
@@ -128,6 +144,9 @@ class Record(AbstractRecord):
             np.array: The difference between adjacent arrival times shown as np.array
         """
         difference = self.difference[self.difference >= 0]
+        '''
+        What does difference = self.difference[self.difference >= 0] mean?
+        '''
         return difference
 
     def get_jitter(self, epsilon, next_expected_arrival_time):

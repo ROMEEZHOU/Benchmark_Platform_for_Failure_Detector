@@ -2,6 +2,10 @@ import numpy as np
 import scipy.stats as st
 from Extension.record import Record
 
+'''
+This class is not used anywhere?
+'''
+
 class Newrecord(Record):
     def __init__(self, n, delta, phi):
         Record.__init__(self, n)

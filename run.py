@@ -10,31 +10,33 @@ import concurrent.futures
 
 
 def translate(language_file, record_class):
-    with open(r'.\Extension\{}.txt'.format(language_file)) as f:
+    with open(f'./Extension/{language_file}.txt') as f:
         language = f.read()
     language = language.replace('\n', '')
     language = language.replace(' ', '')
-    language_list = language.split(';')
-    class_name = record_class.capitalize()
+    language_list = language.split(';') # distinguish Outside, Inside, EA?
+    class_name = record_class.capitalize() # In the current main function, this is Record
     code = """from Extension.{} import {}\nimport os\nimport psutil\nimport numpy as np\nimport math\n\n""".format(
         record_class, class_name)
+    # from Extension.record import Record \n import os ...
+    # environment will be arrival time array
     code += """pid = os.getpid()\nnext_expected_arrival_time = enviornment[0]\nmistake_duration = 0\nwrong_count = 0\n"""
     for i in language_list:
         if i != '':
-            label = i.split(':')[0]
+            label = i.split(':')[0] #Inside or Outside or EA
             content = i.split(':')[1]
             if label == 'Outside':
                 # means this content should be added to the code outside the for loop
-                for j in content.split(','):
+                for j in content.split(','): # j is each parameter in the content
                     if j[0] == 'N':
                         input_list = j.split('=')[1].split('&')
-                        str = ','.join(input_list)
-                        code += '{}={}({})'.format(record_class, class_name, str)
+                        str = ','.join(input_list) # chen: 1000, accural: (new record?) 1000,delta,10? -- seems like the Record data structure cannot be applied to every case...
+                        code += '{}={}({})'.format(record_class, class_name, str) # this code is for initializing the Record object
                     else:
                         code += j + '\n'
                     code += '\n'
 
-                code += 'for arrival_time in enviornment:\n' + '\t{}.append(arrival_time)\n'.format(record_class)
+                code += 'for arrival_time in enviornment:\n' + '\t{}.append(arrival_time)\n'.format(record_class) # Put arrival times into Record/newrecord data structure
 
             if label == 'Inside':
                 # means this content should be added to the code inside the for loop
@@ -49,10 +51,12 @@ def translate(language_file, record_class):
 
             if label == 'EA':
                 # means this content is used to calculate the next expected arrival time
+                # Why EA is not directly made as part of Inside?
                 code += '\tnext_expected_arrival_time={}\n'.format(
                     content.replace('A', 'arrival_time').replace('E', 'next_expected_arrival_time'))
 
     code += 'detection_time = next_expected_arrival_time - enviornment[-1]\nif detection_time < 0:\n'
+    # why is this detection time ...
     code += '\tdetection_time = 0\npa = (len(enviornment) - wrong_count) / len(enviornment)\n'
     code += 'cpu_time = psutil.Process(pid).cpu_times().system\n'
     code += 'memory = psutil.Process(pid).memory_info().rss / 1024 / 1024\n'
@@ -63,6 +67,7 @@ def translate(language_file, record_class):
 def run(enviornment, language_file, record_class):
     code = translate(language_file, record_class)
     g = {}
+    # environment is global
     exec(code, {'enviornment': enviornment, 'delta': 100000000.0}, g)
     return g['mistake_duration'], g['detection_time'], g['pa'], g['cpu_time'], g['memory']
 
@@ -126,7 +131,7 @@ def run_all(language_file, data_file, record_class, processes=32):
 
 if __name__ == '__main__':
     average_detection_time, std_detection_time, average_pa, std_pa, average_mistake_duration, average_cpu_time, \
-    average_memory = run_all('chen', r"C:\Users\34893\PycharmProjects\Benchmark_Platform_for_Failure_Detector\data", 'record')
+    average_memory = run_all('chen', r"data", 'record')
     # run_all('accural', 'newrecord')
 
     print(f"average mistake duration: {average_mistake_duration:.2f} ms")

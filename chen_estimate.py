@@ -99,6 +99,8 @@ def chen_estimate(enviornment, delta_i, n_list, alpha_list):
 
 
 if __name__ == '__main__':
+    dirname = os.path.dirname(__file__)
+
     delta_i = 100000000.0
     n = 1000
     alpha = 100000
@@ -109,7 +111,8 @@ if __name__ == '__main__':
         receive_from_node_list = copy.deepcopy(node_list)
         receive_from_node_list.remove(i)
         for j in receive_from_node_list:
-            df = pd.read_csv(r'.\data\Node{}\trace.csv'.format(i))
+            filename = os.path.join(dirname, "data", f"Node{i}", "trace.csv")
+            df = pd.read_csv(filename)
             df = df[df.site == j]
             arrival_time_array = np.array(df.timestamp_receive)
             results.append(pool.apply_async(chen_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha,)))
