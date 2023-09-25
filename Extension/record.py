@@ -23,7 +23,7 @@ class Record(AbstractRecord):
         self.start_pointer_difference = 0
         self.end_pointer_difference = 0
 
-    def get_sum(self):
+    def get_sum(self, n = -1):
         """
         This method is used to calculate the sum of all arrival times stored in the data structure. It is necessary since
         Chen's and Bertier's algorithms both require this function to calculate the next expected arrival time.
@@ -34,7 +34,16 @@ class Record(AbstractRecord):
         Returns:
             int: The sum of all arrival time stored in the data structure
         """
-        return self.sum
+        if n < 0:
+            return self.sum
+        elif n >= self.current_length:
+            return self.sum
+        else:
+            sum_result = 0
+            for i in range(1,n):
+                sum_result += self.array[(self.end_pointer - i) % self.max_length]
+            #print(self.sum, sum_result)
+            return sum_result
 
     def get_length(self):
         """
