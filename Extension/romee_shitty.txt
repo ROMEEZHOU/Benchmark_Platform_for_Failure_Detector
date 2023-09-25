@@ -1,0 +1,5 @@
+Outside: N=1000,
+alpha=50000000;
+Inside: length=object->get_length(),
+difference=object->get_difference();
+EA: A + sum(difference)/length + alpha;
