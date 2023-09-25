@@ -131,7 +131,7 @@ def run_all(language_file, data_file, record_class, processes=32):
 
 if __name__ == '__main__':
     average_detection_time, std_detection_time, average_pa, std_pa, average_mistake_duration, average_cpu_time, \
-    average_memory = run_all('chen', r"data", 'record')
+    average_memory = run_all('romee_shitty', r"data", 'record')
     # run_all('accural', 'newrecord')
 
     print(f"average mistake duration: {average_mistake_duration:.2f} ms")

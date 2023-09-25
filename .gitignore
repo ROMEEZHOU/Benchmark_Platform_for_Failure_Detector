@@ -157,3 +157,6 @@ hs_err_pid*
 
 # MyData files
 *.mydata
+
+# a python program for doing scratch works
+scratch.py
