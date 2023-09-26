@@ -23,7 +23,7 @@ class Record(AbstractRecord):
         self.start_pointer_difference = 0
         self.end_pointer_difference = 0
 
-    def get_sum(self, n = -1):
+    def get_sum(self, k = -1):
         """
         This method is used to calculate the sum of all arrival times stored in the data structure. It is necessary since
         Chen's and Bertier's algorithms both require this function to calculate the next expected arrival time.
@@ -34,13 +34,13 @@ class Record(AbstractRecord):
         Returns:
             int: The sum of all arrival time stored in the data structure
         """
-        if n < 0:
+        if k < 0:
             return self.sum
-        elif n >= self.current_length:
+        elif k >= self.current_length:
             return self.sum
         else:
             sum_result = 0
-            for i in range(1,n):
+            for i in range(1,k+1):
                 sum_result += self.array[(self.end_pointer - i) % self.max_length]
             #print(self.sum, sum_result)
             return sum_result
@@ -142,7 +142,7 @@ class Record(AbstractRecord):
             '''
             return np.concatenate((self.array[self.start_pointer:], self.array[:self.end_pointer]), axis=0)
 
-    def get_difference(self):
+    def get_difference(self, k = -1):
         """
         This method is used to show the difference between adjacent arrival times.
 
@@ -152,10 +152,20 @@ class Record(AbstractRecord):
         Returns:
             np.array: The difference between adjacent arrival times shown as np.array
         """
-        difference = self.difference[self.difference >= 0]
-        '''
-        What does difference = self.difference[self.difference >= 0] mean?
-        '''
+        if k <= 0:
+            difference = self.difference[self.difference >= 0]
+            '''
+            What does difference = self.difference[self.difference >= 0] mean?
+            '''
+        elif k >= self.current_length:
+            difference = self.difference[self.difference >= 0]
+        else:
+            difference = np.zeros(k, dtype = float)
+            d_index = -1
+            for i in range(1, k + 1):
+                difference[d_index] = self.difference[(self.end_pointer_difference - i) % (self.max_length - 1)]
+                d_index -= 1
+
         return difference
 
     def get_jitter(self, epsilon, next_expected_arrival_time):

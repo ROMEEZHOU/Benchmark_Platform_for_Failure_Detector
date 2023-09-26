@@ -14,23 +14,63 @@ it is rather hard to implement this directly using .txt file,
 so firstly write a python program to realize it.'''
 
 
-def chen_estimate_for_single_value(enviornment, delta_i, n, alpha, window_width = -1):
+def romee_estimate_for_single_value(enviornment, delta_i, n, alpha, window_width1 = -1, window_width2 = -1):
     pid = os.getpid()
 
     mistake_duration = 0
     next_expected_arrival_time = enviornment[0]
+    '''why next_expected_arrival_time here is environment[0]? only for convenience?'''
     record = Record(n)
     wrong_count = 0
-    for arrival_time in enviornment:
-        record.append(arrival_time)
-        current_length = record.get_length()
-        current_sum = record.get_sum()
 
-        if arrival_time > next_expected_arrival_time:
-            mistake_duration += arrival_time - next_expected_arrival_time
-            wrong_count += 1
+    if window_width1 == -1 and window_width2 != -1:
+        window_width1, window_width2 = window_width2, window_width1
 
-        next_expected_arrival_time = alpha + current_sum / current_length + ((current_length + 1) / 2) * delta_i
+    if window_width2 == -1:
+        '''this means the user is not using two windows, there is only one window'''
+        for arrival_time in enviornment:
+            record.append(arrival_time)
+            current_length = record.get_length()
+            current_sum = record.get_sum(window_width1)
+
+            if arrival_time > next_expected_arrival_time:
+                mistake_duration += arrival_time - next_expected_arrival_time
+                wrong_count += 1
+
+            if window_width1 == -1 or current_length < window_width1:
+                '''thie means the user has no requirement on the window width or the current appended records are shorter than the window width, in this case, we use current length to do the calculation.'''
+                next_expected_arrival_time = alpha + current_sum / current_length + ((current_length + 1) / 2) * delta_i
+            else:
+                next_expected_arrival_time = alpha + current_sum / window_width1 + ((window_width1 + 1) / 2) * delta_i
+
+    else:
+        '''this is the case that user specifies both the first window width and the second window width'''
+        for arrival_time in enviornment:
+            record.append(arrival_time)
+            current_length = record.get_length()
+            current_sum1 = record.get_sum(window_width1)
+            current_sum2 = record.get_sum(window_width2)
+
+            if arrival_time > next_expected_arrival_time:
+                mistake_duration += arrival_time - next_expected_arrival_time
+                wrong_count += 1
+
+            next_expected_arrival_time1 = alpha + current_sum1 / (current_length if (current_length < window_width1) else window_width1) + (((current_length if (current_length < window_width1) else window_width1) + 1) / 2) * delta_i
+
+            next_expected_arrival_time2 = alpha + current_sum2 / (current_length if (current_length < window_width2) else window_width2) + (((current_length if (current_length < window_width2) else window_width2) + 1) / 2) * delta_i
+
+            next_expected_arrival_time = max(next_expected_arrival_time1, next_expected_arrival_time2)
+
+    # for arrival_time in enviornment:
+    #     record.append(arrival_time)
+    #     current_length = record.get_length()
+    #     current_sum = record.get_sum()
+
+    #     if arrival_time > next_expected_arrival_time:
+    #         mistake_duration += arrival_time - next_expected_arrival_time
+    #         wrong_count += 1
+
+    #     next_expected_arrival_time = alpha + current_sum / current_length + ((current_length + 1) / 2) * delta_i
 
     detection_time = next_expected_arrival_time - enviornment[-1]
     if detection_time < 0:
@@ -42,7 +82,7 @@ def chen_estimate_for_single_value(enviornment, delta_i, n, alpha, window_width 
     # q.put((mistake_duration, detection_time, pa, cpu_time, memory))
     return mistake_duration, detection_time, pa, cpu_time, memory
 
-
+'''
 def chen_estimate_for_alpha_array(enviornment, delta_i, n, alpha_list):
     mistake_duration = np.zeros(len(alpha_list), dtype=float)
     next_expected_arrival_time = np.array([float('inf') for i in range(len(alpha_list))])
@@ -101,7 +141,7 @@ def chen_estimate(enviornment, delta_i, n_list, alpha_list):
     else:
         mistake_duration = chen_estimate_for_single_value(enviornment, delta_i, n_list, alpha_list)
         return mistake_duration
-
+'''
 
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
@@ -110,6 +150,8 @@ if __name__ == '__main__':
     n = 1000
     alpha = 100000
     node_list = [0, 1, 3, 5, 6, 7, 8, 9]
+    window_width1 = 3
+    window_width2 = 7
     pool = multiprocessing.Pool(processes=56)
     results = []
     for i in node_list:
@@ -120,7 +162,7 @@ if __name__ == '__main__':
             df = pd.read_csv(filename)
             df = df[df.site == j]
             arrival_time_array = np.array(df.timestamp_receive)
-            results.append(pool.apply_async(chen_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha,)))
+            results.append(pool.apply_async(romee_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha, window_width1, window_width2)))
 
     pool.close()
     pool.join()
