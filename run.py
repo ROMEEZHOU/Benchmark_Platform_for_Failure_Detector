@@ -87,7 +87,7 @@ def run_all(language_file, data_file, record_class, processes=32):
                 node_path = os.path.join(data_file, i)
                 csv_path = os.path.join(node_path, 'trace.csv')
                 df = pd.read_csv(csv_path)
-                print(j)
+                #print(j)
                 df = df[df.site == int(j[4:])]
                 arrival_time_array = np.array(df.timestamp_receive)
                 results.append(pool.apply_async(run, (arrival_time_array, language_file, record_class,)))
