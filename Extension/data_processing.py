@@ -111,8 +111,10 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
     add_node_path = os.path.join(data_file, 'Node'+str(node_number))
     os.makedirs(add_node_path, exist_ok=True)
     for item in os.listdir(copied_node_path):
+        if item[0:5] != 'trace':
+            continue
         csv_path = os.path.join(copied_node_path, item)
-
+        print(csv_path)
         df = pd.read_csv(csv_path, usecols=['site', 'timestamp_send', 'timestamp_receive'])
         first_timestamp_send, first_timestamp_receive = df.loc[0, ['timestamp_send', 'timestamp_receive']]
         df_diff = df.diff()[1:]
@@ -202,4 +204,4 @@ def first_operation():
                 df.to_csv(path_or_buf=os.path.join('../data2', i, 'trace' + j[4:] + '.csv'), index=False)
 
 if __name__ == '__main__':
-    add_data(1,'..\data2')
+    add_data(2,'..\data2')
