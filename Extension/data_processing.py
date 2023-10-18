@@ -57,28 +57,35 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
 
     '''first step, for other node, generate trace10.csv from trace0.csv'''
     for item in os.listdir(data_file):
-        if item != 'Node' + str(copied_node_number):
+        if item[0:4] == 'Node' and item != 'Node' + str(copied_node_number):
             csv_path = os.path.join(data_file, item, 'trace' + str(copied_node_number) + '.csv')
 
             df = pd.read_csv(csv_path, usecols=['site', 'timestamp_send', 'timestamp_receive'])
             first_timestamp_send, first_timestamp_receive = df.loc[0, ['timestamp_send', 'timestamp_receive']]
             df_diff = df.diff()[1:]
+            print('df at first:', df_diff.shape)
             
             new_trace = pd.DataFrame(data = {'site': [node_number], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
             total_length, _ = df_diff.shape
             sub_length = total_length // permute_number
+            print(sub_length)
             for per_index in permute_list[permute_index]:
                 if per_index != permute_number:
-                    new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):((per_index*sub_length) + 1),:]])
+                    print(((per_index-1) * sub_length), (per_index*sub_length) + 1)
+                    new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):(per_index*sub_length),:]])
+                    print(new_trace.shape)
                 else:
-                    new_trace = pd.concat([new_trace, df_diff.iloc[(total_length - (permute_number-1)*sub_length):,:]])
+                    new_trace = pd.concat([new_trace, df_diff.iloc[((permute_number-1)*sub_length):,:]])
+                    print((total_length - (permute_number-1)*sub_length),'end')
+                    print(new_trace.shape)
 
             '''write the new trace'''
             new_trace = new_trace.cumsum()
+            print(new_trace.shape)
             new_trace.to_csv(path_or_buf=os.path.join(data_file, item, 'trace' + str(node_number) + '.csv'), index=False)
 
 
-        else:
+        elif item[0:4] == 'Node':
             '''if the node is the copied node itself, copy the traces it received from Node copied_node_number+1 as the traces it received from Node node_number'''
 
             backup_copied_node_number = original_list[(node_number - 1) % 8]
@@ -93,9 +100,9 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
             sub_length = total_length // (permute_number+1)
             for per_index in backup_permute_list[backup_permute_index]:
                 if per_index != permute_number+1:
-                    new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):((per_index*sub_length) + 1),:]])
+                    new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):(per_index*sub_length),:]])
                 else:
-                    new_trace = pd.concat([new_trace, df_diff.iloc[(total_length - (permute_number-1)*sub_length):,:]])
+                    new_trace = pd.concat([new_trace, df_diff.iloc[((permute_number-1)*sub_length):,:]])
             new_trace = new_trace.cumsum()
             new_trace.to_csv(path_or_buf=os.path.join(data_file, item, 'trace' + str(node_number) + '.csv'), index=False)
 
@@ -117,9 +124,9 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
         sub_length = total_length // permute_number
         for per_index in permute_list[permute_index]:
             if per_index != permute_number:
-                new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):((per_index*sub_length) + 1),:]])
+                new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):(per_index*sub_length),:]])
             else:
-                new_trace = pd.concat([new_trace, df_diff.iloc[(total_length - (permute_number-1)*sub_length):,:]])
+                new_trace = pd.concat([new_trace, df_diff.iloc[((permute_number-1)*sub_length):,:]])
         new_trace = new_trace.cumsum()
         new_trace.to_csv(path_or_buf=os.path.join(add_node_path, item), index=False)
 
@@ -136,9 +143,9 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
     sub_length = total_length // (permute_number+1)
     for per_index in backup_permute_list[backup_permute_index]:
         if per_index != permute_number+1:
-            new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):((per_index*sub_length) + 1),:]])
+            new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):(per_index*sub_length),:]])
         else:
-            new_trace = pd.concat([new_trace, df_diff.iloc[(total_length - (permute_number-1)*sub_length):,:]])
+            new_trace = pd.concat([new_trace, df_diff.iloc[( (permute_number-1)*sub_length):,:]])
     new_trace = new_trace.cumsum()
     new_trace.to_csv(path_or_buf=os.path.join(add_node_path, 'trace'+str(copied_node_number)+'.csv'), index=False)
 
