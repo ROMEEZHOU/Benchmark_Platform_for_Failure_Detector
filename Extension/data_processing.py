@@ -95,7 +95,7 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
             first_timestamp_send, first_timestamp_receive = df.loc[0, ['timestamp_send', 'timestamp_receive']]
             df_diff = df.diff()[1:]
 
-            new_trace = pd.DataFrame(data = {'site': [1], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
+            new_trace = pd.DataFrame(data = {'site': [str(node_number)], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
             total_length, _ = df_diff.shape
             sub_length = total_length // (permute_number+1)
             for per_index in backup_permute_list[backup_permute_index]:
