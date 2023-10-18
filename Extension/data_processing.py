@@ -95,7 +95,7 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
             first_timestamp_send, first_timestamp_receive = df.loc[0, ['timestamp_send', 'timestamp_receive']]
             df_diff = df.diff()[1:]
 
-            new_trace = pd.DataFrame(data = {'site': [str(node_number)], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
+            new_trace = pd.DataFrame(data = {'site': [node_number], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
             total_length, _ = df_diff.shape
             sub_length = total_length // (permute_number+1)
             for per_index in backup_permute_list[backup_permute_index]:
@@ -103,6 +103,7 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
                     new_trace = pd.concat([new_trace, df_diff.iloc[((per_index-1) * sub_length):(per_index*sub_length),:]])
                 else:
                     new_trace = pd.concat([new_trace, df_diff.iloc[((permute_number-1)*sub_length):,:]])
+            #print(new_trace[:4])
             new_trace = new_trace.cumsum()
             new_trace.to_csv(path_or_buf=os.path.join(data_file, item, 'trace' + str(node_number) + '.csv'), index=False)
 
@@ -121,8 +122,8 @@ def add_node(data_file, permute_number, permute_list, permute_index, backup_perm
         first_timestamp_send, first_timestamp_receive = df.loc[0, ['timestamp_send', 'timestamp_receive']]
         df_diff = df.diff()[1:]
 
-        site = str(item).split('.')[0][5]
-        site = int(site)
+        site_list = str(item).split('.')[0][5:]
+        site = int(''.join(site_list))
         new_trace = pd.DataFrame(data = {'site': [site], 'timestamp_send': [first_timestamp_send], 'timestamp_receive': [first_timestamp_receive]})
         total_length, _ = df_diff.shape
         sub_length = total_length // permute_number
@@ -206,4 +207,4 @@ def first_operation():
                 df.to_csv(path_or_buf=os.path.join('../data2', i, 'trace' + j[4:] + '.csv'), index=False)
 
 if __name__ == '__main__':
-    add_data(13,'..\data2')
+    add_data(17,'../data2')
