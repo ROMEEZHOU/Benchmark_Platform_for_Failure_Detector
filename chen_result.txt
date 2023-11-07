@@ -1,0 +1,42 @@
+chen n= 20 alpha = 1000000
+pa:0.9195642495207075
+standard pa: 0.05240015048898563
+average detection time: 101.02288200223214
+detection time standard deviation: 0.05240015048898563
+average cpu time: 0.0018591911071428571
+
+chen n= 20 alpha = 2000000
+pa:0.9549207767612327
+standard pa: 0.034028126350213
+average detection time: 102.02288200223214
+detection time standard deviation: 0.034028126350213
+average cpu time: 0.0017729276071428571
+
+chen n= 20 alpha = 3000000
+pa:0.972171712848336
+standard pa: 0.024217031823258864
+average detection time: 103.02288200223214
+detection time standard deviation: 0.024217031823258864
+average cpu time: 0.0017808869285714287
+
+chen n= 20 alpha = 4000000
+pa:0.9815195035543004
+standard pa: 0.017508786017894032
+average detection time: 104.02288200223214
+detection time standard deviation: 0.017508786017894032
+average cpu time: 0.0018082688928571426
+
+chen n= 20 alpha = 5000000
+pa:0.9869043965791032
+standard pa: 0.012726579720247546
+average detection time: 105.02288200223214
+detection time standard deviation: 0.012726579720247546
+average cpu time: 0.0017781205892857146
+
+chen n= 20 alpha = 6000000
+pa:0.9903736419842551
+standard pa: 0.009382685126079959
+average detection time: 106.02288200223214
+detection time standard deviation: 0.009382685126079959
+average cpu time: 0.0019129314642857141
+

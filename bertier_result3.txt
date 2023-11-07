@@ -1,0 +1,30 @@
+bertier n= 100 gamma = 0.01 beta = 1 phi = 0.5
+pa:0.7288918667560027
+detection time: 99836095.0
+cpu time: 0.00158901
+
+bertier n= 100 gamma = 0.01 beta = 1 phi = 1.0
+pa:0.778883366500995
+detection time: 99948584.5
+cpu time: 0.001631032
+
+bertier n= 100 gamma = 0.01 beta = 1 phi = 1.5
+pa:0.8186145584367531
+detection time: 100064744.0
+cpu time: 0.001652936
+
+bertier n= 100 gamma = 0.01 beta = 1 phi = 2.0
+pa:0.851965558966769
+detection time: 100184882.5
+cpu time: 0.001705257
+
+bertier n= 100 gamma = 0.01 beta = 1 phi = 2.5
+pa:0.8799563986919607
+detection time: 100309397.0
+cpu time: 0.001726083
+
+bertier n= 100 gamma = 0.01 beta = 1 phi = 3.0
+pa:0.9035171055131654
+detection time: 100439997.5
+cpu time: 0.001762507
+

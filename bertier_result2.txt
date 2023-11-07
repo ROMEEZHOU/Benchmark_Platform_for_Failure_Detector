@@ -1,0 +1,50 @@
+bertier n= 100 gamma = 0.01 beta = 1 phi = 4
+pa:0.9390681720451614
+detection time: 100712041.0
+cpu time: 0.001655694
+
+bertier n= 100 gamma = 0.02 beta = 1 phi = 4
+pa:0.9352680580417413
+detection time: 101269032.0
+cpu time: 0.001675225
+
+bertier n= 100 gamma = 0.03 beta = 1 phi = 4
+pa:0.9333179995399862
+detection time: 101935075.0
+cpu time: 0.00170385
+
+bertier n= 100 gamma = 0.04 beta = 1 phi = 4
+pa:0.9330579917397522
+detection time: 102412506.5
+cpu time: 0.001725936
+
+bertier n= 100 gamma = 0.05 beta = 1 phi = 4
+pa:0.9332179965398962
+detection time: 102174109.5
+cpu time: 0.00174121
+
+bertier n= 100 gamma = 0.060000000000000005 beta = 1 phi = 4
+pa:0.9339280178405353
+detection time: 101731505.0
+cpu time: 0.001758075
+
+bertier n= 100 gamma = 0.06999999999999999 beta = 1 phi = 4
+pa:0.9349180475414263
+detection time: 101656601.5
+cpu time: 0.001767791
+
+bertier n= 100 gamma = 0.08 beta = 1 phi = 4
+pa:0.9356080682420472
+detection time: 101753988.0
+cpu time: 0.001801366
+
+bertier n= 100 gamma = 0.09 beta = 1 phi = 4
+pa:0.9365580967429022
+detection time: 101876186.5
+cpu time: 0.001826231
+
+bertier n= 100 gamma = 0.09999999999999999 beta = 1 phi = 4
+pa:0.9376581297438923
+detection time: 102034380.5
+cpu time: 0.001856896
+
