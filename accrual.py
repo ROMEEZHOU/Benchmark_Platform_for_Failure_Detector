@@ -129,48 +129,82 @@ def accural_estimate(enviornment, delta_i, n, phi):
 
 
 if __name__ == '__main__':
+    record_file = open('accrual_result2.txt','w')
     delta_i = 100000000.0
     n = 1000
     phi = 10
-    node_list = [0, 1, 3, 5, 6, 7, 8, 9]
-    pool = multiprocessing.Pool(processes=56)
-    results = []
-    for i in node_list:
-        receive_from_node_list = copy.deepcopy(node_list)
-        receive_from_node_list.remove(i)
-        for j in receive_from_node_list:
-            df = pd.read_csv(r'.\data\Node{}\trace.csv'.format(i))
-            df = df[df.site == j]
-            arrival_time_array = np.array(df.timestamp_receive)
-            results.append(pool.apply_async(accural_estimate_for_single_value, (arrival_time_array, delta_i, n, phi,)))
+    phi_list = np.arange(4,16,2)
+    n_list = np.arange(100,1000,100)
+    node_list = [0, 1, 3]
+    pa_result = []
+    dt_average_result = []
+    for phi in phi_list:
+        pool = multiprocessing.Pool(processes=56)
+        results = []
+        for i in node_list:
+            receive_from_node_list = copy.deepcopy(node_list)
+            receive_from_node_list.remove(i)
+            for j in receive_from_node_list:
+                print(i,j,phi)
+                df = pd.read_csv(r'data/Node{}/trace.csv'.format(i))
+                df = df[df.site == j]
+                arrival_time_array = np.array(df.timestamp_receive)
+                results.append(pool.apply_async(accural_estimate_for_single_value, (arrival_time_array, delta_i, n, phi,)))
 
-    pool.close()
-    pool.join()
-    mistake_duration_list = []
-    detection_time_list = []
-    pa_list = []
-    cpu_time_list = []
-    memory_list = []
-    for res in results:
-        mistake_duration_list.append(res.get()[0] / 1000000)
-        detection_time_list.append(res.get()[1] / 1000000)
-        pa_list.append(res.get()[2])
-        cpu_time_list.append(res.get()[3])
-        memory_list.append(res.get()[4])
+        pool.close()
+        pool.join()
+        mistake_duration_list = []
+        detection_time_list = []
+        pa_list = []
+        cpu_time_list = []
+        memory_list = []
+        for res in results:
+            mistake_duration_list.append(res.get()[0] / 1000000)
+            detection_time_list.append(res.get()[1] / 1000000)
+            pa_list.append(res.get()[2])
+            cpu_time_list.append(res.get()[3])
+            memory_list.append(res.get()[4])
 
-    mistake_duration_array = np.array(mistake_duration_list)
-    detection_time_array = np.array(detection_time_list)
-    pa_array = np.array(pa_list)
-    cpu_time_array = np.array(cpu_time_list)
-    memory_array = np.array(memory_list)
+        mistake_duration_array = np.array(mistake_duration_list)
+        detection_time_array = np.array(detection_time_list)
+        pa_array = np.array(pa_list)
+        cpu_time_array = np.array(cpu_time_list)
+        memory_array = np.array(memory_list)
 
-    print(f"average mistake duration: {np.mean(mistake_duration_array):.2f} ms")
-    print(f"average detection time: {np.mean(detection_time_array):.2f} ms")
-    print(f"average pa: {np.mean(pa_array):.2%}")
-    print(f"average cpu time: {np.mean(cpu_time_array):.2f} s")
-    print(f"average memory: {np.mean(memory_array):.2f} MB")
-    print(f"std detection time: {np.std(detection_time_array):.2f} ms")
-    print(f"std pa: {np.std(pa_array):.2%}")
+        pa_result.append(np.mean(pa_array))
+        dt_average_result.append(np.mean(detection_time_array))
+
+        record_file.write('accrual '+ 'n= '+str(n)+' phi = '+str(phi) + '\n')
+        record_file.write('pa:'+str(np.mean(pa_array))+'\n')
+        record_file.write('std pa:'+str(np.std(pa_array))+'\n')
+        record_file.write('average detection time: '+str(np.mean(detection_time_array))+'\n')
+        record_file.write('detection time standard deviation: '+str(np.std(detection_time_array))+'\n')
+        record_file.write('cpu time: '+str(np.mean(cpu_time_array))+'\n')
+        record_file.write('\n')
+
+
+        # print(f"average mistake duration: {np.mean(mistake_duration_array):.2f} ms")
+        # print(f"average detection time: {np.mean(detection_time_array):.2f} ms")
+        # print(f"average pa: {np.mean(pa_array):.2%}")
+        # print(f"average cpu time: {np.mean(cpu_time_array):.2f} s")
+        # print(f"average memory: {np.mean(memory_array):.2f} MB")
+        # print(f"std detection time: {np.std(detection_time_array):.2f} ms")
+        # print(f"std pa: {np.std(pa_array):.2%}")
+
+    record_file.close()
+    fig, axl = plt.subplots()
+    axl.plot(phi_list, pa_result)
+    axl.set_xlabel("phi")
+    axl.set_ylabel("pa", color="tab:blue")
+    axl.tick_params(axis="y")
+
+    # Also plot the velocities
+    axr = axl.twinx()
+    axr.plot(phi_list, dt_average_result, color="tab:orange")
+    axr.set_ylabel("detection time", color="tab:orange")
+    axr.tick_params(axis="y")
+
+    plt.show()
 
     # df = pd.read_csv(r'.\data\Node0\trace.csv')
     # df = df[df.site == 8]

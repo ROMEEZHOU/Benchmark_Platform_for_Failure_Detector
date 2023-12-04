@@ -146,51 +146,89 @@ def chen_estimate(enviornment, delta_i, n_list, alpha_list):
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
 
+    #record_file = open('romee2_result.txt','w')
     delta_i = 100000000.0
     n = 1000
-    alpha = 100000
-    node_list = [0, 1, 3, 5, 6, 7, 8, 9]
-    window_width1 = 3
-    window_width2 = 7
-    pool = multiprocessing.Pool(processes=56)
+    alpha = 5000000
+    node_list = [0, 1, 3]
+    window_width1 = 5
+    window_width2 = 50
+    window_width1_list = np.arange(9,27,3)
+    window_width2_list = np.arange(30,330,30)
+    pa_result_list = []
+    dt_result_list = []
     results = []
-    for i in node_list:
-        receive_from_node_list = copy.deepcopy(node_list)
-        receive_from_node_list.remove(i)
-        for j in receive_from_node_list:
-            filename = os.path.join(dirname, "data", f"Node{i}", "trace.csv")
-            df = pd.read_csv(filename)
-            df = df[df.site == j]
-            arrival_time_array = np.array(df.timestamp_receive)
-            results.append(pool.apply_async(romee_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha, window_width1, window_width2)))
+    # trace_info = []
 
-    pool.close()
-    pool.join()
-    mistake_duration_list = []
-    detection_time_list = []
-    pa_list = []
-    cpu_time_list = []
-    memory_list = []
-    for res in results:
-        mistake_duration_list.append(res.get()[0] / 1000000)
-        detection_time_list.append(res.get()[1] / 1000000)
-        pa_list.append(res.get()[2])
-        cpu_time_list.append(res.get()[3])
-        memory_list.append(res.get()[4])
+    for window_width1 in window_width1_list:
+        pool = multiprocessing.Pool(processes=56)
+        for i in node_list:
+            receive_from_node_list = copy.deepcopy(node_list)
+            receive_from_node_list.remove(i)
+            for j in receive_from_node_list:
+                filename = os.path.join(dirname, "data", f"Node{i}", "trace.csv")
+                df = pd.read_csv(filename)
+                df = df[df.site == j]
 
-    mistake_duration_array = np.array(mistake_duration_list)
-    detection_time_array = np.array(detection_time_list)
-    pa_array = np.array(pa_list)
-    cpu_time_array = np.array(cpu_time_list)
-    memory_array = np.array(memory_list)
+                df_diff = df.loc[:,'timestamp_receive'].diff()
+                #trace_info.append(df_diff.max() - df_diff.min())
+                df_variance = df_diff.var()
+                #print(df_variance)
+                # trace_info.append(df_variance)
 
-    print(f"average mistake duration: {np.mean(mistake_duration_array):.2f} ms")
-    print(f"average detection time: {np.mean(detection_time_array):.2f} ms")
-    print(f"average pa: {np.mean(pa_array):.2%}")
-    print(f"average cpu time: {np.mean(cpu_time_array):.2f} s")
-    print(f"average memory: {np.mean(memory_array):.2f} MB")
-    print(f"std detection time: {np.std(detection_time_array):.2f} ms")
-    print(f"std pa: {np.std(pa_array):.2%}")
+                arrival_time_array = np.array(df.timestamp_receive)
+                results.append(pool.apply_async(romee_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha, window_width1, window_width2)))
+
+        pool.close()
+        pool.join()
+        mistake_duration_list = []
+        detection_time_list = []
+        pa_list = []
+        cpu_time_list = []
+        memory_list = []
+        for res in results:
+            mistake_duration_list.append(res.get()[0] / 1000000)
+            detection_time_list.append(res.get()[1] / 1000000)
+            pa_list.append(res.get()[2])
+            cpu_time_list.append(res.get()[3])
+            memory_list.append(res.get()[4])
+
+    # trace_mistake = pd.DataFrame({"trace_variance": trace_info, "pa": pa_list})
+    # plot = trace_mistake.plot.scatter(x = 'trace_variance', y = 'pa', title = 'PA to Difference')
+    # plot.set_xscale("log")
+    # plt.yticks(np.arange(0.5, 1.05, 0.05))
+    # plt.show()
+
+        mistake_duration_array = np.array(mistake_duration_list)
+        detection_time_array = np.array(detection_time_list)
+        pa_array = np.array(pa_list)
+        cpu_time_array = np.array(cpu_time_list)
+        memory_array = np.array(memory_list)
+
+        pa_result_list.append(np.mean(pa_array))
+        dt_result_list.append(np.mean(detection_time_array))
+
+    fig, axl = plt.subplots()
+    axl.plot(window_width1_list, pa_result_list)
+    axl.set_xlabel("window1")
+    axl.set_ylabel("pa", color="tab:blue")
+    axl.tick_params(axis="y")
+
+    # Also plot the velocities
+    axr = axl.twinx()
+    axr.plot(window_width1_list, dt_result_list , color="tab:orange")
+    axr.set_ylabel("detection time", color="tab:orange")
+    axr.tick_params(axis="y")
+
+    plt.show()
+
+    # print(f"average mistake duration: {np.mean(mistake_duration_array):.2f} ms")
+    # print(f"average detection time: {np.mean(detection_time_array):.2f} ms")
+    # print(f"average pa: {np.mean(pa_array):.2%}")
+    # print(f"average cpu time: {np.mean(cpu_time_array):.2f} s")
+    # print(f"average memory: {np.mean(memory_array):.2f} MB")
+    # print(f"std detection time: {np.std(detection_time_array):.2f} ms")
+    # print(f"std pa: {np.std(pa_array):.2%}")
 
     # df = pd.read_csv(r'.\data\Node0\trace.csv')
     # df = df[df.site == 8]

@@ -9,7 +9,7 @@ import multiprocessing
 import copy
 
 
-def chen_estimate_for_single_value(enviornment, delta_i, n, alpha):
+def romee_shitty_for_single_value(enviornment, n, alpha):
     pid = os.getpid()
 
     mistake_duration = 0
@@ -19,13 +19,13 @@ def chen_estimate_for_single_value(enviornment, delta_i, n, alpha):
     for arrival_time in enviornment:
         record.append(arrival_time)
         current_length = record.get_length()
-        current_sum = record.get_sum()
+        current_diff = record.get_difference()
 
         if arrival_time > next_expected_arrival_time:
             mistake_duration += arrival_time - next_expected_arrival_time
             wrong_count += 1
 
-        next_expected_arrival_time = alpha + current_sum / current_length + ((current_length + 1) / 2) * delta_i
+        next_expected_arrival_time = arrival_time + sum(current_diff)/current_length + alpha
 
     detection_time = next_expected_arrival_time - enviornment[-1]
     if detection_time < 0:
@@ -38,83 +38,24 @@ def chen_estimate_for_single_value(enviornment, delta_i, n, alpha):
     return mistake_duration, detection_time, pa, cpu_time, memory
 
 
-def chen_estimate_for_alpha_array(enviornment, delta_i, n, alpha_list):
-    mistake_duration = np.zeros(len(alpha_list), dtype=float)
-    next_expected_arrival_time = np.array([float('inf') for i in range(len(alpha_list))])
-    record = Record(n)
-    for arrival_time in enviornment:
-        record.append(arrival_time)
-        current_length = record.get_length()
-        current_sum = record.get_sum()
-
-        duration = -next_expected_arrival_time + arrival_time
-        duration = np.maximum(duration, 0)
-        mistake_duration += duration
-
-        next_expected_arrival_time = alpha_list + current_sum / current_length + (
-                (current_length + 1) / 2) * delta_i
-
-    return mistake_duration
-
-
-def chen_estimate_for_n_array(enviornment, delta_i, n_list, alpha):
-    mistake_duration = np.zeros(len(n_list), dtype=float)
-    next_expected_arrival_time = np.array([float('inf') for i in range(len(n_list))])
-    record_list = [Record(i) for i in n_list]
-    current_length = np.zeros(len(n_list))
-    current_sum = np.zeros(len(n_list), dtype=float)
-    for arrival_time in enviornment:
-        for inx, record in enumerate(record_list):
-            record.append(arrival_time)
-            current_length[inx] = record.get_length()
-            current_sum[inx] = record.get_sum()
-
-        duration = -next_expected_arrival_time + arrival_time
-        duration = np.maximum(duration, 0)
-        mistake_duration += duration
-
-        next_expected_arrival_time = alpha + current_sum / current_length + (
-                (current_length + 1) / 2) * delta_i
-
-    return mistake_duration
-
-
-def chen_estimate(enviornment, delta_i, n_list, alpha_list):
-    if type(n_list) != np.ndarray and type(n_list) != int:
-        raise TypeError('The data type of n can only be numpy array or int')
-    if type(alpha_list) != np.ndarray and type(alpha_list) != int:
-        raise TypeError('The data type of alpha can only be numpy array or int')
-
-    if type(n_list) == np.ndarray and type(alpha_list) == np.ndarray:
-        raise TypeError('The data type of n and alpha cannot be both array')
-    elif type(alpha_list) == np.ndarray:
-        mistake_duration = chen_estimate_for_alpha_array(enviornment, delta_i, n_list, alpha_list)
-        return mistake_duration
-    elif type(n_list) == np.ndarray:
-        mistake_duration = chen_estimate_for_n_array(enviornment, delta_i, n_list, alpha_list)
-        return mistake_duration
-    else:
-        mistake_duration = chen_estimate_for_single_value(enviornment, delta_i, n_list, alpha_list)
-        return mistake_duration
-
-
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
     #record_file = open('chen_result.txt','w')
     delta_i = 100000000.0
-    n_list = np.arange(10,110,10)
+    n_list = np.arange(20,220,20)
     a_list = np.arange(1000000,7000000,1000000)
     print(len(n_list))
     pa_result = []
     dt_average_result = []
     dt_std_result = []
+    alpha = 4000000
     #here need to change to iterate through different alpha
     n = 20
-    for alpha in a_list:
+    for n in n_list:
         print(alpha)
         # n = 1000
         #alpha = 7000000
-        node_list = [0, 1, 3, 5, 6, 7, 8, 9]
+        node_list = [0, 1, 3]
         pool = multiprocessing.Pool(processes=56)
         results = []
         for i in node_list:
@@ -125,7 +66,7 @@ if __name__ == '__main__':
                 df = pd.read_csv(filename)
                 df = df[df.site == j]
                 arrival_time_array = np.array(df.timestamp_receive)
-                results.append(pool.apply_async(chen_estimate_for_single_value, (arrival_time_array, delta_i, n, alpha,)))
+                results.append(pool.apply_async(romee_shitty_for_single_value, (arrival_time_array, n, alpha,)))
 
         pool.close()
         pool.join()
@@ -154,13 +95,13 @@ if __name__ == '__main__':
         dt_average_result.append(dt_average)
         dt_std_result.append(dt_std)
         
-        record_file.write('chen '+ 'n= '+str(n)+' alpha = '+str(alpha) + '\n')
-        record_file.write('pa:'+str(current_pa)+'\n')
-        record_file.write('standard pa: '+str(np.std(pa_array))+'\n')
-        record_file.write('average detection time: '+str(dt_average)+'\n')
-        record_file.write('detection time standard deviation: '+str(dt_std)+'\n')
-        record_file.write('average cpu time: '+str(np.mean(cpu_time_array))+'\n')
-        record_file.write('\n')
+        # record_file.write('chen '+ 'n= '+str(n)+' alpha = '+str(alpha) + '\n')
+        # record_file.write('pa:'+str(current_pa)+'\n')
+        # record_file.write('standard pa: '+str(np.std(pa_array))+'\n')
+        # record_file.write('average detection time: '+str(dt_average)+'\n')
+        # record_file.write('detection time standard deviation: '+str(dt_std)+'\n')
+        # record_file.write('average cpu time: '+str(np.mean(cpu_time_array))+'\n')
+        # record_file.write('\n')
 
     # trace_mistake = pd.DataFrame({"a": a_list, "d_a": dt_average_result, "d_s": dt_std_result, "pa": pa_result})
     # plot = trace_mistake.plot(x = 'a', y = 'd_a', title = 'Average Detection to alpha')
@@ -174,14 +115,14 @@ if __name__ == '__main__':
 
     # Plot the F-x graph
     fig, axl = plt.subplots()
-    axl.plot(a_list, pa_result)
-    axl.set_xlabel("alpha")
+    axl.plot(n_list, pa_result)
+    axl.set_xlabel("n")
     axl.set_ylabel("pa", color="tab:blue")
     axl.tick_params(axis="y")
 
     # Also plot the velocities
     axr = axl.twinx()
-    axr.plot(a_list, dt_average_result, color="tab:orange")
+    axr.plot(n_list, dt_average_result, color="tab:orange")
     axr.set_ylabel("detection time", color="tab:orange")
     axr.tick_params(axis="y")
 

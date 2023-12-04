@@ -29,6 +29,7 @@ def translate(language_file, record_class):
                 # means this content should be added to the code outside the for loop
                 for j in content.split(','): # j is each parameter in the content
                     if j[0] == 'N':
+                        #N is the max length of the record (window size?)
                         input_list = j.split('=')[1].split('&')
                         str = ','.join(input_list) # chen: 1000, accural: (new record?) 1000,delta,10? -- seems like the Record data structure cannot be applied to every case...
                         code += '{}={}({})'.format(record_class, class_name, str) # this code is for initializing the Record object
@@ -75,6 +76,7 @@ def run(enviornment, language_file, record_class):
 def run_all(language_file, data_file, record_class, processes=32):
     pool = multiprocessing.Pool(processes=processes)
     results = []
+    trace_info = []
     directories = []
     for item in os.listdir(data_file):
         item_path = os.path.join(data_file, item)
@@ -83,12 +85,19 @@ def run_all(language_file, data_file, record_class, processes=32):
     for i in directories:
         for j in directories:
             if i != j:
+                #if we want to know the relation between how FDs perform and, say, the varianve of the traces, we need to inaddition keep record of traces' info
                 #create multi-processing based on different nodes
                 node_path = os.path.join(data_file, i)
                 csv_path = os.path.join(node_path, 'trace.csv')
                 df = pd.read_csv(csv_path)
                 #print(j)
                 df = df[df.site == int(j[4:])]
+
+                df_diff = df.loc[:,'timestamp_receive'].diff()
+                # trace_info.append(df_diff.max() - df_diff.min())
+                df_variance = df_diff.var()
+                trace_info.append(df_variance)
+
                 arrival_time_array = np.array(df.timestamp_receive)
                 results.append(pool.apply_async(run, (arrival_time_array, language_file, record_class,)))
 
@@ -121,6 +130,11 @@ def run_all(language_file, data_file, record_class, processes=32):
         cpu_time_list.append(res.get()[3])
         memory_list.append(res.get()[4])
 
+    trace_mistake = pd.DataFrame({"trace_variance": trace_info, "pa": pa_list})
+    plot = trace_mistake.plot.scatter(x = 'trace_variance', y = 'pa', title = 'PA to Variance')
+    plot.set_xscale("log")
+    plt.yticks(np.arange(0.5, 1.05, 0.05))
+    plt.show()
     mistake_duration_array = np.array(mistake_duration_list)
     detection_time_array = np.array(detection_time_list)
     pa_array = np.array(pa_list)
@@ -133,7 +147,7 @@ def run_all(language_file, data_file, record_class, processes=32):
 
 if __name__ == '__main__':
     average_detection_time, std_detection_time, average_pa, std_pa, average_mistake_duration, average_cpu_time, \
-    average_memory = run_all('romee_shitty', r"data", 'record')
+    average_memory = run_all('accrual_newrecord', r"data", 'newrecord')
     # run_all('accural', 'newrecord')
 
     print(f"average mistake duration: {average_mistake_duration:.2f} ms")

@@ -137,12 +137,14 @@ def bertier_estimate(enviornment, delta_i, n, delay, var, gamma, beta=1, phi=4):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv(r'.\data\Node0\trace.csv')
+    record_file = open("bertier_result3.txt",'w')
+    df = pd.read_csv(r'data/Node0/trace.csv')
     df = df[df.site == 8]
     arrival_time_array = np.array(df.timestamp_receive)
 
     delta_i = 100000000.0
-    n = 1000
+    n = 100
+
     # alpha_list = np.array([i for i in range(10001)], dtype=float)
     # alpha_list = 10000
     # gamma = np.array([i / 10 for i in range(10)], dtype=np.float64)
@@ -153,16 +155,47 @@ if __name__ == '__main__':
     var = 0
     beta = 1
     phi = 4
+    phi_list = np.arange(0.5,3.5,0.5)
+    beta_list = np.arange(0.5,5,0.5)
+    gamma_list = np.arange(0.01,0.11,0.01)
+    pa_result = []
+    dt_average_result = []
+    dt_std_result = []
 
-    mistake_duration, detection_time, pa, cpu_time, memory = bertier_estimate_for_single_value(arrival_time_array,
+    for phi in phi_list:
+        mistake_duration, detection_time, pa, cpu_time, memory = bertier_estimate_for_single_value(arrival_time_array,
                                                                                                delta_i, n, delay,
                                                                                                var, gamma, beta, phi)
+        pa_result.append(pa)
+        dt_average_result.append(detection_time)
 
-    print(f"{mistake_duration / 1000000:.2f} ms")
-    print(f"{detection_time / 1000000:.2f} ms")
-    print(f"{pa:.2%}")
-    print(f"{cpu_time:.2f} s")
-    print(f"{memory:.2f} MB")
+        record_file.write('bertier '+ 'n= '+str(n)+' gamma = '+str(gamma) +' beta = '+str(beta) +' phi = '+str(phi) + '\n')
+        record_file.write('pa:'+str(pa)+'\n')
+        record_file.write('detection time: '+str(detection_time)+'\n')
+        record_file.write('cpu time: '+str(cpu_time)+'\n')
+        record_file.write('\n')
+
+    record_file.close()
+    fig, axl = plt.subplots()
+    axl.plot(phi_list, pa_result)
+    axl.set_xlabel("phi")
+    axl.set_ylabel("pa", color="tab:blue")
+    axl.tick_params(axis="y")
+
+    # Also plot the velocities
+    axr = axl.twinx()
+    axr.plot(phi_list, dt_average_result, color="tab:orange")
+    axr.set_ylabel("detection time", color="tab:orange")
+    axr.tick_params(axis="y")
+
+    plt.show()
+
+    # print(f"{mistake_duration / 1000000:.2f} ms")
+    # print(f"{detection_time / 1000000:.2f} ms")
+    # print(f"{pa:.2%}")
+    # print(f"{cpu_time:.2f} s")
+    # print(f"{memory:.2f} MB")
+
     #
     # plt.plot(n, mistake_duration)
     # plt.show()
